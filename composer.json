@@ -1,0 +1,20 @@
+{
+    "name":         "trueapps/simbila-php-api",
+    "description":  "PHP client for simbila.com service",
+    "type":         "library",
+    "keywords":     ["Simbila"],
+    "homepage":     "https://simbila.com",
+    "license":      "MIT",
+    "authors":      [
+        {
+            "name":  "Tomas Hnilica",
+            "email": "tomas@trueapps.cz"
+        }
+    ],
+    "recommend":    {
+        "ext-curl": "*"
+    },
+    "autoload":     {
+        "psr-0": { "Simbila_": "" }
+    }    
+}
