@@ -269,6 +269,14 @@ class Simbila {
 		);					
 	}
 
+	/**
+	Get all invoices of the client and his single firm
+	*/
+	public function clientInvoices() {
+		return new Simbila_Response(
+			$this->request('/invoice/clientInvoices' ,'GET')
+		);					
+	}
 
 	
 	/**
