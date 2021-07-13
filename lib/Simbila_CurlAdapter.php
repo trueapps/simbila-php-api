@@ -59,7 +59,7 @@ class Simbila_CurlAdapter implements Simbila_AdapterInterface {
 				CURLOPT_USERAGENT => $userAgent,
 				CURLOPT_FOLLOWLOCATION => true,
 				CURLOPT_MAXREDIRS => 10,
-				CURLOPT_VERBOSE, true,
+				CURLOPT_VERBOSE => true,
 			);
 			foreach ($options as $key=>$val) {
 				curl_setopt($this->_resource, $key, $val);

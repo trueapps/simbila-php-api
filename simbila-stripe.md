@@ -10,37 +10,38 @@ The process:
 
 ##### 2. On your page insert this code:
 
-<div id='simbila-stripe-payment'></div>
-<script src="https://www.simbila.com/js/loadingoverlay.min.js"></script>
-<script src="https://js.stripe.com/v3/"></script>
-<script src="https://www.simbila.com/js/simbila-stripe.js"></script>
-<script type="text/javascript">
-    var simbilaStripe = null;
-    $(document).ready(function(){
-        var params = {
-            'element' : $('#simbila-stripe-payment'),
-            'stripe_key' : '{YOUR_STRIPE_PUBLISHABLE_KEY}',
-            'createBillingUrl' : '{YOUR_SERVER_API_URL}',
-            'messages' : {
-                'payBtn' : 'Zaplatit',
-                'successMsg' : 'Děkujeme vám za Vaši platbu!',
-            },
-            'successCallback' : function(){
-                alert('hej, dopadlo to');
-            },
-            'billing_details' : {
-                'name' : 'Tomas Hnilica',
-                'address' : {
-                    'postal_code' : '62700',
-                }
-            }        
-        };
-        simbilaStripe = new SimbilaStripe(params);
-        simbilaStripe.init();
-        
-    });
 
-</script>
+    <div id='simbila-stripe-payment'></div>
+    <script src="https://www.simbila.com/js/loadingoverlay.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://www.simbila.com/js/simbila-stripe.js"></script>
+    <script type="text/javascript">
+        var simbilaStripe = null;
+        $(document).ready(function(){
+            var params = {
+                'element' : $('#simbila-stripe-payment'),
+                'stripe_key' : '{YOUR_STRIPE_PUBLISHABLE_KEY}',
+                'createBillingUrl' : '{YOUR_SERVER_API_URL}',
+                'messages' : {
+                    'payBtn' : 'Zaplatit',
+                    'successMsg' : 'Děkujeme vám za Vaši platbu!',
+                },
+                'successCallback' : function(){
+                    alert('hej, dopadlo to');
+                },
+                'billing_details' : {
+                    'name' : 'Tomas Hnilica',
+                    'address' : {
+                        'postal_code' : '62700',
+                    }
+                }        
+            };
+            simbilaStripe = new SimbilaStripe(params);
+            simbilaStripe.init();
+
+        });
+
+    </script>
 
 
 ##### 3.Your server API endpoint example
