@@ -379,8 +379,22 @@ class Simbila {
 		);		
 		
 	}    
+        
+        
+        /**
+         * Generic request method
+         * @param type $path
+         * @param type $method
+         * @param array $args
+         * @return \Simbila_Response
+         */
+        public function req($path, $method = 'GET', array $args = null) {
+            return new Simbila_Response(
+                $this->request($path, $method, $args)
+            );
+        }
 
-	/**
+    /**
 	 * Execute Simbila API request
 	 *
 	 * @param string $path Path to the API action
