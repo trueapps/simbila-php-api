@@ -7,9 +7,13 @@
 	require('../lib/Simbila_Http_NativeAdapter.php');
 	require('../lib/Simbila_Response.php');
 	require('../lib/Simbila_Response_Exception.php');
-	
-	
-	$simbila = new Simbila('tomas@tomashnilica.com','THAPI', 'lunchdrive','19');
+
+	// API key obtained from Simbila account settings (Settings → API).
+	// appId   = identifier of your 3rd-party application (stored as firms.fy_app in Simbila)
+	// appUser = your application's user/account ID (stored as firms.fy_app_user in Simbila)
+	//
+	// Example: Lunchdrive (appId='lunchdrive') managing billing for its account #345 (appUser=345)
+	$simbila = new Simbila('YOUR_API_KEY_HERE', 'your_app_id', 'your_app_user_id');
 	
 	/*create new billing*/
 	$data = array(

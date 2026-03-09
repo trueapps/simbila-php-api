@@ -21,82 +21,58 @@ class Simbila {
 	const INVOICE_PAID = 'paid';
 	const INVOICE_AFTER_MATURITY = 'after maturity';
 	const INVOICE_BEFORE_MATURITY = 'before maturity';
-    
-    
 
 
 	/**
-	 * The adapter to access cookie data etc.
-	 * By default, it will use PHP superglobals directly but an implementation based on the
-	 * abstraction of a framework can be used.
-	 *
-	 * @var Simbila_Http_AdapterInterface
+	 * @var string Bearer API key for accessing the Simbila API v1
 	 */
-	static private $_requestAdapter;
-	
+	private $_apiKey;
 
 	/**
-	 * @var string Username credential for accessing the Simbila API
-	 */
-	private $_username;
-
-	/**
-	 * @var string Password credential for accessing the Simbila API
-	 */
-	private $_password;
-
-	/**
-	 * @var string This Application ID
+	 * @var string|null 3rd-party application identifier (stored as firms.fy_app in Simbila)
 	 */
 	private $_appId;
 
-
 	/**
-	 * @var string This Application user ID
+	 * @var string|int|null 3rd-party application user identifier (stored as firms.fy_app_user in Simbila)
 	 */
 	private $_appUser;
 
 	/**
-	 * @var string URL for accessing the Simbila API
+	 * @var string Base URL for the Simbila API v1
 	 */
 	private $_url;
 
-
 	/**
-	 *
-	 * @var Simbila_Client_AdapterInterface
+	 * @var Simbila_AdapterInterface
 	 */
 	private $_httpClient;
 
 	/**
 	 * Constructor
 	 *
-	 * @param $url string
-	 * @param $username string
-	 * @param $password string
-	 * @param $productCode string
-	 * @param string $productId
-	 * @param Simbila_Client_AdapterInterface $adapter
+	 * @param string                    $apiKey   Bearer API key (obtained from Simbila account settings)
+	 * @param string|null               $appId    3rd-party app identifier (e.g. 'lunchdrive'); stored as firms.fy_app
+	 * @param string|int|null           $appUser  3rd-party app user identifier (e.g. 345); stored as firms.fy_app_user
+	 * @param Simbila_AdapterInterface  $adapter  HTTP adapter (defaults to Simbila_CurlAdapter)
 	 */
-	public function __construct( $username, $password, $appId, $appUser = '', Simbila_Client_AdapterInterface $adapter = null) {
-
-		$this->setUrl('https://www.simbila.com/api');
-		$this->setUsername($username);
-		$this->setPassword($password);
-		$this->setAppId($appId);
-		$this->setAppUser($appUser);
+	public function __construct($apiKey, $appId = null, $appUser = null, Simbila_AdapterInterface $adapter = null) {
+		$this->setUrl('https://simbila.com/api/v1');
+		$this->setApiKey($apiKey);
+		$this->_appId   = $appId;
+		$this->_appUser = $appUser;
 
 		if (!$adapter) {
-				$adapter = new Simbila_CurlAdapter();
+			$adapter = new Simbila_CurlAdapter();
 		}
 		$this->_httpClient = $adapter;
 	}
 
 	/**
-	 * Set URL neccessary for for accessing the Simbila API
+	 * Set base URL for the Simbila API
 	 *
-	 * @param $url string
-	 * @return Simbila_Client
+	 * @param string $url
+	 * @return Simbila
 	 */
 	public function setUrl($url) {
 		$this->_url = $url;
@@ -104,7 +80,7 @@ class Simbila {
 	}
 
 	/**
-	 * Get URL
+	 * Get base URL
 	 *
 	 * @return string
 	 */
@@ -113,50 +89,30 @@ class Simbila {
 	}
 
 	/**
-	 * Set username neccessary for for accessing the Simbila API
+	 * Set Bearer API key
 	 *
-	 * @param $username string
-	 * @return Simbila_Client
+	 * @param string $apiKey
+	 * @return Simbila
 	 */
-	public function setUsername($username) {
-		$this->_username = $username;
+	public function setApiKey($apiKey) {
+		$this->_apiKey = $apiKey;
 		return $this;
 	}
 
 	/**
-	 * Get username
+	 * Get Bearer API key
 	 *
 	 * @return string
 	 */
-	public function getUsername() {
-		return $this->_username;
+	public function getApiKey() {
+		return $this->_apiKey;
 	}
 
 	/**
-	 * Set password neccessary for accessing the Simbila API
+	 * Set the 3rd-party application identifier (stored as firms.fy_app)
 	 *
-	 * @param $password string
-	 * @return Simbila_Client
-	 */
-	public function setPassword($password) {
-		$this->_password = $password;
-		return $this;
-	}
-
-	/**
-	 * Get current password
-	 *
-	 * @return string
-	 */
-	private function _getPassword() {
-		return $this->_password;
-	}
-
-	/**
-	 * Set application ID
-	 *
-	 * @param $appId string
-	 * @return Simbila_Client
+	 * @param string|null $appId
+	 * @return Simbila
 	 */
 	public function setAppId($appId) {
 		$this->_appId = $appId;
@@ -164,28 +120,19 @@ class Simbila {
 	}
 
 	/**
-	 * Get current application ID
+	 * Get the 3rd-party application identifier
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function getAppId() {
 		return $this->_appId;
 	}
-	
-		/**
-	 * Get current application user
-	 *
-	 * @return string
-	 */
-	public function getAppUser() {
-		return $this->_appUser;
-	}
 
 	/**
-	 * Set application user
+	 * Set the 3rd-party application user identifier (stored as firms.fy_app_user)
 	 *
-	 * @param $appId string
-	 * @return Simbila_Client
+	 * @param string|int|null $appUser
+	 * @return Simbila
 	 */
 	public function setAppUser($appUser) {
 		$this->_appUser = $appUser;
@@ -193,66 +140,85 @@ class Simbila {
 	}
 
 	/**
-	Clear cached variable /session/
-	*/
-	public function clearCache() {
-		$session_key = "simbila-".$this->_appId."-".$this->_appUser;
-		if(isset($_SESSION[$session_key])) {
-			unset($_SESSION[$session_key]);
-		}
-	}
-	
-	/**
-	Get status data of the user
-	*/
-	public function billingStatus($cache = true) {
-		$session_key = "simbila-".$this->_appId."-".$this->_appUser;
-		if ($cache && isset($_SESSION[$session_key])) {
-			/*return saved session*/
-			return new Simbila_Response($_SESSION[$session_key]);
-		}		
-		$response = $this->request('/billing/status');
-		$_SESSION[$session_key] = $response;
-		return new Simbila_Response($response);
+	 * Get the 3rd-party application user identifier
+	 *
+	 * @return string|int|null
+	 */
+	public function getAppUser() {
+		return $this->_appUser;
 	}
 
 	/**
-	Create new billing (subscription)
-	*/
+	 * Build the appId/appUser query string used by billing endpoints.
+	 * Returns e.g. "?appId=lunchdrive&appUser=345" or "" when not set.
+	 *
+	 * @return string
+	 */
+	private function appQueryString() {
+		$params = array();
+		if ($this->_appId !== null && $this->_appId !== '') {
+			$params[] = 'appId=' . urlencode($this->_appId);
+		}
+		if ($this->_appUser !== null && $this->_appUser !== '') {
+			$params[] = 'appUser=' . urlencode($this->_appUser);
+		}
+		return $params ? '?' . implode('&', $params) : '';
+	}
+
+	/**
+	 * Get the Simbila firm (client) record linked to the 3rd-party app user.
+	 * Returns the firm's attributes (name, email, address, etc.).
+	 * Corresponds to GET /api/v1/billing/client?appId=X&appUser=Y
+	 */
+	public function billingClient() {
+		return new Simbila_Response(
+			$this->request('/billing/client' . $this->appQueryString())
+		);
+	}
+
+	/**
+	 * Get billing status for the 3rd-party app user (identified by appId + appUser)
+	 */
+	public function billingStatus() {
+		return new Simbila_Response(
+			$this->request('/billing/status' . $this->appQueryString())
+		);
+	}
+
+	/**
+	 * Create new billing (subscription) for the 3rd-party app user
+	 */
 	public function createBilling($params) {
 		return new Simbila_Response(
-			$this->request('/billing/create','POST', $params)
-		);		
-		
-	}
-	
-	/**
-	Update current billing (subscription)
-	*/
-	public function updateBilling($params, $userId = '') {
-		return new Simbila_Response(
-			$this->request('/billing/update','PUT', $params)
-		);		
+			$this->request('/billing' . $this->appQueryString(), 'POST', $params)
+		);
 	}
 
 	/**
-	Delete billing (subscription)
-	*/
+	 * Update current billing (subscription) for the 3rd-party app user
+	 */
+	public function updateBilling($params) {
+		return new Simbila_Response(
+			$this->request('/billing' . $this->appQueryString(), 'PUT', $params)
+		);
+	}
+
+	/**
+	 * Delete billing (subscription) for the 3rd-party app user
+	 */
 	public function deleteBilling() {
 		return new Simbila_Response(
-			$this->request('/billing/delete','DELETE')
-		);				
+			$this->request('/billing' . $this->appQueryString(), 'DELETE')
+		);
 	}
 
-	
 	/**
-	Return all invoices of an account
-	*/
+	 * Return all billing invoices for the 3rd-party app user
+	 */
 	public function billingInvoices() {
 		return new Simbila_Response(
-			$this->request('/billing/invoices','GET')
-		);				
-		
+			$this->request('/billing/invoices' . $this->appQueryString())
+		);
 	}
 	
 /****************************************************/
@@ -260,159 +226,152 @@ class Simbila {
 /****************************************************/
 
 	/**
-	Get all invoices of the client
-	TH todo: implement filtering
-	*/
+	 * Get all invoices of the account
+	 */
 	public function invoices() {
 		return new Simbila_Response(
-			$this->request('/invoice/list','GET')
-		);					
+			$this->request('/invoices')
+		);
 	}
 
 	/**
-	Get all invoices of the client and his single firm
-	*/
+	 * Get invoices for the current client/firm
+	 */
 	public function clientInvoices() {
 		return new Simbila_Response(
-			$this->request('/invoice/clientInvoices' ,'GET')
-		);					
+			$this->request('/invoices/client')
+		);
 	}
 
-	
 	/**
-	Get details of a single invoice
-	*/
+	 * Get details of a single invoice
+	 */
 	public function invoice($id) {
 		return new Simbila_Response(
-			$this->request('/invoice/' . $id, 'GET')
-		);							
+			$this->request('/invoices/' . $id)
+		);
 	}
 
 	/**
-	Create new invoice (single invoice)
-	*/
+	 * Create new invoice
+	 */
 	public function createInvoice($params) {
 		return new Simbila_Response(
-			$this->request('/invoice/create','POST', $params)
-		);		
-		
-	}
-
-  /**
-	Delete invoice
-	*/
-	public function deleteInvoice($id) {
-		return new Simbila_Response(
-			$this->request('/invoice/' . $id ,'DELETE')
-		);				
+			$this->request('/invoices', 'POST', $params)
+		);
 	}
 
 	/**
-	Update invoice 
-	*/
+	 * Update invoice
+	 */
 	public function updateInvoice($id, $params) {
 		return new Simbila_Response(
-			$this->request('/invoice/' . $id,'PUT', $params)
-		);		
+			$this->request('/invoices/' . $id, 'PUT', $params)
+		);
 	}
-    
+
 	/**
-	 * Invoice action on invoice
+	 * Delete invoice
 	 */
-	 public function invokeInvoiceAction($id, $action, $params = array()) {
+	public function deleteInvoice($id) {
 		return new Simbila_Response(
-			$this->request('/invoice/' . $id . '/fire?method=fire&action=' . $action . '&id=' . $id, 'POST', $params)
-		);							
-	 	
-	 }
-     
+			$this->request('/invoices/' . $id, 'DELETE')
+		);
+	}
+
 	/**
-	 * Send and invoice (issue sending on Simbila service)
+	 * Invoke an action on an invoice
 	 */
-	 public function sendInvoice($id) {
-	 	return $this->invokeInvoiceAction($id, 'send');
-	 }     
-     
+	public function invokeInvoiceAction($id, $action, $params = array()) {
+		return new Simbila_Response(
+			$this->request('/invoices/' . $id . '/action/' . $action, 'POST', $params)
+		);
+	}
+
 	/**
-	Returen all clients
-	*/
+	 * Send an invoice
+	 */
+	public function sendInvoice($id) {
+		return $this->invokeInvoiceAction($id, 'send');
+	}
+
+	/**
+	 * Return all clients (firms)
+	 */
 	public function clients() {
 		return new Simbila_Response(
-			$this->request('/firm/list', 'GET')
-		);					
+			$this->request('/firms')
+		);
 	}
 
 	/**
-	Get details of a single client
-	*/
+	 * Get details of a single client (firm)
+	 */
 	public function client($id) {
 		return new Simbila_Response(
-			$this->request('/firm/' . $id, 'GET')
-		);							
+			$this->request('/firms/' . $id)
+		);
 	}
 
 	/**
-	Returen all recurring invoices
-	*/
+	 * Return all recurring invoices
+	 */
 	public function rinvoices() {
 		return new Simbila_Response(
-			$this->request('/rinvoice/list', 'GET')
-		);					
+			$this->request('/rinvoices')
+		);
 	}
 
 	/**
-	Get details of a single recurring invoice
-	*/
+	 * Get details of a single recurring invoice
+	 */
 	public function rinvoice($id) {
 		return new Simbila_Response(
-			$this->request('/rinvoice/' . $id, 'GET')
-		);							
+			$this->request('/rinvoices/' . $id)
+		);
 	}
 
-    
 	/**
-	Create new payment
-	*/
+	 * Create new payment
+	 */
 	public function createPayment($params) {
 		return new Simbila_Response(
-			$this->request('/payment/create','POST', $params)
-		);		
-		
-	}    
-        
-        
-        /**
-         * Generic request method
-         * @param type $path
-         * @param type $method
-         * @param array $args
-         * @return \Simbila_Response
-         */
-        public function req($path, $method = 'GET', array $args = null) {
-            return new Simbila_Response(
-                $this->request($path, $method, $args)
-            );
-        }
+			$this->request('/payments', 'POST', $params)
+		);
+	}
 
-    /**
-	 * Execute Simbila API request
+	/**
+	 * Generic request helper — call any v1 endpoint directly
 	 *
-	 * @param string $path Path to the API action
-	 * @param array|null $args HTTP post key value pairs
-	 * @return string Body of the response from the Simbila API
+	 * @param string     $path   e.g. '/invoices/42'
+	 * @param string     $method GET|POST|PUT|DELETE
+	 * @param array|null $args
+	 * @return Simbila_Response
+	 */
+	public function req($path, $method = 'GET', array $args = null) {
+		return new Simbila_Response(
+			$this->request($path, $method, $args)
+		);
+	}
+
+	/**
+	 * Execute a Simbila API v1 request
+	 *
+	 * @param string     $path   Relative path, e.g. '/invoices'
+	 * @param string     $method GET|POST|PUT|DELETE
+	 * @param array|null $args   Request payload
+	 * @return string Raw response body
 	 * @throws Simbila_Exception
 	 */
 	protected function request($path, $method = 'GET', array $args = null) {
 		$url = $this->_url . $path;
-		if (strpos($url, '?')) $url = $url . "&appId=".$this->getAppId() . "&appUser=" . $this->getAppUser();
-		else $url = $url . "?appId=".$this->getAppId() . "&appUser=" . $this->getAppUser();
-		return $this->_httpClient->request($url, $method, $this->getUsername(), $this->_getPassword(), $args);
+		return $this->_httpClient->request($url, $method, $this->_apiKey, $args);
 	}
 
 	/**
-	 * Set http client
+	 * Set HTTP client adapter
 	 *
-	 * @param Simbila_AdapterInterface|resource $client curl resource.
+	 * @param Simbila_AdapterInterface $client
 	 * @return Simbila
 	 * @throws Simbila_Exception
 	 */
@@ -421,61 +380,16 @@ class Simbila {
 			$this->_httpClient = $client;
 			return $this;
 		}
-
-		
-		if (is_resource($client) && get_resource_type($client) == 'curl') {
-			$this->_httpClient = new Simbila_CurlAdapter($client);
-			return $this;
-		}
-
-		throw new Simbila_Exception("httpClient can only be an instance of Simbila_AdapterInterface or a php curl resource.", Simbila_Exception::USAGE_INVALID);
+		throw new Simbila_Exception("httpClient must be an instance of Simbila_AdapterInterface.", Simbila_Exception::USAGE_INVALID);
 	}
 
 	/**
-	 * Get the current http client
+	 * Get the current HTTP client adapter
 	 *
 	 * @return Simbila_AdapterInterface
 	 */
 	public function getHttpClient() {
 		return $this->_httpClient;
-	}
-
-	/**
-	 * Set request adapter
-	 *
-	 * @param Simbila_Http_AdapterInterface $requestAdapter
-	 */
-	static public function setRequestAdapter(Simbila_Http_AdapterInterface $requestAdapter) {
-		self::$_requestAdapter = $requestAdapter;
-	}
-
-	/**
-	 * Gets the request adapter.
-	 *
-	 * @return Simbila_Http_AdapterInterface
-	 */
-	static public function getRequestAdapter() {
-		if (!self::$_requestAdapter) {			
-				self::$_requestAdapter = new Simbila_Http_NativeAdapter();			
-		}
-
-		return self::$_requestAdapter;
-	}
-
-	/**
-		TH: do delete?
-	 * Convenience method for requiring an identifier
-	 *
-	 * @param string $code
-	 * @param string $id
-	 * @return bool true if $code or $id exists
-	 * @throws Simbila_Exception if neither identifier exists
-	 */
-	private function _requireIdentifier($code, $id) {
-		if (!$code && !$id) {
-			throw new Simbila_Exception('Either a code or id is required', CheddarGetter_Client_Exception::USAGE_INVALID);
-		}
-		return true;
 	}
 
 	
