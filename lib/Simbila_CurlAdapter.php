@@ -70,8 +70,14 @@ class Simbila_CurlAdapter implements Simbila_AdapterInterface {
 		switch ($method) {
 			case 'GET':
 				curl_setopt($this->_resource, CURLOPT_HTTPGET, true);
-				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, 'GET');
-				$requestUrl = ($args) ? $url . '?' . http_build_query($args) : $url;
+				if ($args) {
+					// The URL may already carry a query string (e.g. ?appId=X&appUser=Y).
+					// Use '&' as the separator when a '?' is already present.
+					$separator  = (strpos($url, '?') !== false) ? '&' : '?';
+					$requestUrl = $url . $separator . http_build_query($args);
+				} else {
+					$requestUrl = $url;
+				}
 				curl_setopt($this->_resource, CURLOPT_URL, $requestUrl);
 				break;
 

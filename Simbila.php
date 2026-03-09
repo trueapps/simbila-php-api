@@ -166,6 +166,17 @@ class Simbila {
 	}
 
 	/**
+	 * Get the Simbila firm (client) record linked to the 3rd-party app user.
+	 * Returns the firm's attributes (name, email, address, etc.).
+	 * Corresponds to GET /api/v1/billing/client?appId=X&appUser=Y
+	 */
+	public function billingClient() {
+		return new Simbila_Response(
+			$this->request('/billing/client' . $this->appQueryString())
+		);
+	}
+
+	/**
 	 * Get billing status for the 3rd-party app user (identified by appId + appUser)
 	 */
 	public function billingStatus() {
