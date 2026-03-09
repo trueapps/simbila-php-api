@@ -19,6 +19,18 @@ class YiiSimbila extends CApplicationComponent
 	public $apiKey;
 
 	/**
+	 * @var string|null 3rd-party application identifier (stored as firms.fy_app).
+	 *   E.g. 'lunchdrive'. Required for all billing methods.
+	 */
+	public $appId;
+
+	/**
+	 * @var string|int|null 3rd-party application user identifier (stored as firms.fy_app_user).
+	 *   E.g. 345. Required for all billing methods.
+	 */
+	public $appUser;
+
+	/**
 	 * @var string Simbila API v1 base URL
 	 */
 	public $simbilaUrl = 'https://simbila.com/api/v1';
@@ -34,7 +46,7 @@ class YiiSimbila extends CApplicationComponent
 	 */
 	public function init()
 	{
-		$this->simbila = new Simbila($this->apiKey);
+		$this->simbila = new Simbila($this->apiKey, $this->appId, $this->appUser);
 		$this->simbila->setUrl($this->simbilaUrl);
 		parent::init();
 	}

@@ -29,6 +29,16 @@ class Simbila {
 	private $_apiKey;
 
 	/**
+	 * @var string|null 3rd-party application identifier (stored as firms.fy_app in Simbila)
+	 */
+	private $_appId;
+
+	/**
+	 * @var string|int|null 3rd-party application user identifier (stored as firms.fy_app_user in Simbila)
+	 */
+	private $_appUser;
+
+	/**
 	 * @var string Base URL for the Simbila API v1
 	 */
 	private $_url;
@@ -41,12 +51,16 @@ class Simbila {
 	/**
 	 * Constructor
 	 *
-	 * @param string                    $apiKey  Bearer API key (obtained from Simbila account settings)
-	 * @param Simbila_AdapterInterface  $adapter HTTP adapter (defaults to Simbila_CurlAdapter)
+	 * @param string                    $apiKey   Bearer API key (obtained from Simbila account settings)
+	 * @param string|null               $appId    3rd-party app identifier (e.g. 'lunchdrive'); stored as firms.fy_app
+	 * @param string|int|null           $appUser  3rd-party app user identifier (e.g. 345); stored as firms.fy_app_user
+	 * @param Simbila_AdapterInterface  $adapter  HTTP adapter (defaults to Simbila_CurlAdapter)
 	 */
-	public function __construct($apiKey, Simbila_AdapterInterface $adapter = null) {
+	public function __construct($apiKey, $appId = null, $appUser = null, Simbila_AdapterInterface $adapter = null) {
 		$this->setUrl('https://simbila.com/api/v1');
 		$this->setApiKey($apiKey);
+		$this->_appId   = $appId;
+		$this->_appUser = $appUser;
 
 		if (!$adapter) {
 			$adapter = new Simbila_CurlAdapter();
@@ -93,49 +107,106 @@ class Simbila {
 	public function getApiKey() {
 		return $this->_apiKey;
 	}
-	
+
 	/**
-	 * Get billing status of the current account
+	 * Set the 3rd-party application identifier (stored as firms.fy_app)
+	 *
+	 * @param string|null $appId
+	 * @return Simbila
+	 */
+	public function setAppId($appId) {
+		$this->_appId = $appId;
+		return $this;
+	}
+
+	/**
+	 * Get the 3rd-party application identifier
+	 *
+	 * @return string|null
+	 */
+	public function getAppId() {
+		return $this->_appId;
+	}
+
+	/**
+	 * Set the 3rd-party application user identifier (stored as firms.fy_app_user)
+	 *
+	 * @param string|int|null $appUser
+	 * @return Simbila
+	 */
+	public function setAppUser($appUser) {
+		$this->_appUser = $appUser;
+		return $this;
+	}
+
+	/**
+	 * Get the 3rd-party application user identifier
+	 *
+	 * @return string|int|null
+	 */
+	public function getAppUser() {
+		return $this->_appUser;
+	}
+
+	/**
+	 * Build the appId/appUser query string used by billing endpoints.
+	 * Returns e.g. "?appId=lunchdrive&appUser=345" or "" when not set.
+	 *
+	 * @return string
+	 */
+	private function appQueryString() {
+		$params = array();
+		if ($this->_appId !== null && $this->_appId !== '') {
+			$params[] = 'appId=' . urlencode($this->_appId);
+		}
+		if ($this->_appUser !== null && $this->_appUser !== '') {
+			$params[] = 'appUser=' . urlencode($this->_appUser);
+		}
+		return $params ? '?' . implode('&', $params) : '';
+	}
+
+	/**
+	 * Get billing status for the 3rd-party app user (identified by appId + appUser)
 	 */
 	public function billingStatus() {
 		return new Simbila_Response(
-			$this->request('/billing/status')
+			$this->request('/billing/status' . $this->appQueryString())
 		);
 	}
 
 	/**
-	 * Create new billing (subscription)
+	 * Create new billing (subscription) for the 3rd-party app user
 	 */
 	public function createBilling($params) {
 		return new Simbila_Response(
-			$this->request('/billing', 'POST', $params)
+			$this->request('/billing' . $this->appQueryString(), 'POST', $params)
 		);
 	}
 
 	/**
-	 * Update current billing (subscription)
+	 * Update current billing (subscription) for the 3rd-party app user
 	 */
 	public function updateBilling($params) {
 		return new Simbila_Response(
-			$this->request('/billing', 'PUT', $params)
+			$this->request('/billing' . $this->appQueryString(), 'PUT', $params)
 		);
 	}
 
 	/**
-	 * Delete billing (subscription)
+	 * Delete billing (subscription) for the 3rd-party app user
 	 */
 	public function deleteBilling() {
 		return new Simbila_Response(
-			$this->request('/billing', 'DELETE')
+			$this->request('/billing' . $this->appQueryString(), 'DELETE')
 		);
 	}
 
 	/**
-	 * Return all billing invoices
+	 * Return all billing invoices for the 3rd-party app user
 	 */
 	public function billingInvoices() {
 		return new Simbila_Response(
-			$this->request('/billing/invoices')
+			$this->request('/billing/invoices' . $this->appQueryString())
 		);
 	}
 	
