@@ -7,9 +7,9 @@
 	require('../lib/Simbila_Http_NativeAdapter.php');
 	require('../lib/Simbila_Response.php');
 	require('../lib/Simbila_Response_Exception.php');
-	
-	
-	$simbila = new Simbila('tomas@tomashnilica.com','THAPI', 'lunchdrive','19');
+
+	// API key obtained from Simbila account settings (Settings → API)
+	$simbila = new Simbila('YOUR_API_KEY_HERE');
 	
 	/*create new billing*/
 	$data = array(

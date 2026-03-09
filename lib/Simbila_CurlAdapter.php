@@ -31,85 +31,86 @@ class Simbila_CurlAdapter implements Simbila_AdapterInterface {
 	}
 
 	/**
-	 * Execute Simbila API request
+	 * Execute Simbila API v1 request
 	 *
-	 * @param string $url Url to the API action
-	 * @param string $metohd REST method of the call (GET|POST|PUT|DELETE)
-	 * @param string $username Username
-	 * @param string $password Password
-	 * @param array|null $args HTTP post key value pairs
+	 * @param string     $url    Full URL to the API action
+	 * @param string     $method REST method (GET|POST|PUT|DELETE)
+	 * @param string     $apiKey Bearer token for the Authorization header
+	 * @param array|null $args   Request payload (JSON-encoded for non-GET; appended as query string for GET)
 	 * @return string Body of the response from the Simbila API
 	 * @throws Simbila_Exception Throws an exception if the curl session results in an error.
 	 */
-	public function request($url, $method, $username, $password, array $args = null) {
-		if ($method!='GET' && $method!="POST" && $method!="PUT" && $method!="DELETE") 
-						throw new Simbila_Exception('The REST method is invalid.', Simbila_Exception::REQUEST_INVALID);
+	public function request($url, $method, $apiKey, array $args = null) {
+		if (!in_array($method, array('GET', 'POST', 'PUT', 'DELETE'))) {
+			throw new Simbila_Exception('The REST method is invalid.', Simbila_Exception::REQUEST_INVALID);
+		}
+
+		$userAgent = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] . ' - Simbila PHP' : 'Simbila PHP';
 
 		if (!$this->_resource) {
-			$this->_resource = curl_init($url);
-			$userAgent = (isset($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] . ' - Simbila PHP' : 'Simbila PHP';
-			
-			
-			$options = array(
+			$this->_resource = curl_init();
+			curl_setopt_array($this->_resource, array(
 				CURLOPT_RETURNTRANSFER => true,
-				CURLOPT_SSL_VERIFYPEER => false,
-				CURLOPT_SSL_VERIFYHOST => false,
+				CURLOPT_SSL_VERIFYPEER => true,
+				CURLOPT_SSL_VERIFYHOST => 2,
 				CURLOPT_CONNECTTIMEOUT => 10,
-				CURLOPT_TIMEOUT => 60,
-				CURLOPT_USERAGENT => $userAgent,
+				CURLOPT_TIMEOUT        => 60,
+				CURLOPT_USERAGENT      => $userAgent,
 				CURLOPT_FOLLOWLOCATION => true,
-				CURLOPT_MAXREDIRS => 10,
-				CURLOPT_VERBOSE => true,
-			);
-			foreach ($options as $key=>$val) {
-				curl_setopt($this->_resource, $key, $val);
-			}
-			
-		} else {
-			curl_setopt($this->_resource, CURLOPT_HTTPGET, true);
-			curl_setopt($this->_resource, CURLOPT_URL, $url);
+				CURLOPT_MAXREDIRS      => 10,
+			));
 		}
 
+		// Common headers for all requests
+		$headers = array(
+			'Authorization: Bearer ' . $apiKey,
+			'Accept: application/json',
+		);
 
-		switch($method) {
+		switch ($method) {
 			case 'GET':
-				curl_setopt($this->_resource, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: GET'));
 				curl_setopt($this->_resource, CURLOPT_HTTPGET, true);
 				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, 'GET');
-				if ($args) curl_setopt($this->_resource, CURLOPT_URL, $url . '?'.http_build_query($args));
+				$requestUrl = ($args) ? $url . '?' . http_build_query($args) : $url;
+				curl_setopt($this->_resource, CURLOPT_URL, $requestUrl);
 				break;
+
 			case 'POST':
-				curl_setopt($this->_resource, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: POST'));
+				$body = $args ? json_encode($args) : '{}';
+				curl_setopt($this->_resource, CURLOPT_URL, $url);
 				curl_setopt($this->_resource, CURLOPT_POST, true);
-				curl_setopt($this->_resource, CURLOPT_POSTFIELDS, http_build_query($args));
+				curl_setopt($this->_resource, CURLOPT_POSTFIELDS, $body);
+				$headers[] = 'Content-Type: application/json';
+				$headers[] = 'Content-Length: ' . strlen($body);
 				break;
+
 			case 'PUT':
-				curl_setopt($this->_resource, CURLOPT_POST, true);
-				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, "PUT");
-				curl_setopt($this->_resource, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: PUT'));
-				curl_setopt($this->_resource, CURLOPT_POSTFIELDS, http_build_query($args));
+				$body = $args ? json_encode($args) : '{}';
+				curl_setopt($this->_resource, CURLOPT_URL, $url);
+				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, 'PUT');
+				curl_setopt($this->_resource, CURLOPT_POSTFIELDS, $body);
+				$headers[] = 'Content-Type: application/json';
+				$headers[] = 'Content-Length: ' . strlen($body);
 				break;
+
 			case 'DELETE':
-				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, "DELETE");
-				curl_setopt($this->_resource, CURLOPT_HTTPHEADER, array('X-HTTP-Method-Override: DELETE'));
+				curl_setopt($this->_resource, CURLOPT_URL, $url);
+				curl_setopt($this->_resource, CURLOPT_CUSTOMREQUEST, 'DELETE');
 				break;
 		}
 
-		//set HTTP auth headers
-		curl_setopt($this->_resource, CURLOPT_HTTPHEADER, array('X_SIMBILA_USERNAME: '.$username,'X_SIMBILA_PASSWORD: ' . $password));
+		curl_setopt($this->_resource, CURLOPT_HTTPHEADER, $headers);
 
-		/*
-		curl_setopt($this->_resource, CURLOPT_HEADER, true);
-		curl_setopt($this->_resource, CURLOPT_VERBOSE, true);
-		*/
 		$result = curl_exec($this->_resource);
 
-		if ($result === false || curl_error($this->_resource) != '') {
-			throw new Simbila_Exception('cUrl session resulted in an error: (' . curl_errno($this->_resource) . ')' . curl_error($this->_resource), Simbila_Exception::UNKNOWN);
+		if ($result === false || curl_error($this->_resource) !== '') {
+			throw new Simbila_Exception(
+				'cUrl session resulted in an error: (' . curl_errno($this->_resource) . ') ' . curl_error($this->_resource),
+				Simbila_Exception::UNKNOWN
+			);
 		}
-		
-		return $result;
 
+		return $result;
 	}
 
 	/**
