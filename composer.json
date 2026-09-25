@@ -1,20 +1,34 @@
 {
-    "name":         "trueapps/simbila-php-api",
-    "description":  "PHP client for simbila.com service",
-    "type":         "library",
-    "keywords":     ["Simbila"],
-    "homepage":     "https://simbila.com",
-    "license":      "MIT",
-    "authors":      [
+    "name": "trueapps/simbila-php-api",
+    "description": "PHP client for the Simbila.com /api/v1 (Bearer token)",
+    "type": "library",
+    "keywords": ["Simbila"],
+    "homepage": "https://simbila.com",
+    "license": "MIT",
+    "authors": [
         {
-            "name":  "Tomas Hnilica",
+            "name": "Tomas Hnilica",
             "email": "tomas@trueapps.cz"
         }
     ],
-    "recommend":    {
-        "ext-curl": "*"
+    "require": {
+        "php": ">=8.1",
+        "guzzlehttp/guzzle": "^7.5"
     },
-    "autoload":     {
-        "classmap": [ "lib/", "Simbila.php"]
-    }    
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TrueApps\\SimbilaApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TrueApps\\SimbilaApi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
 }
